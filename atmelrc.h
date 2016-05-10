@@ -2,6 +2,7 @@
 #define HEADER_FILE
 
 //Includes
+#include <avr/io.h>
 #include <avr/interrupt.h>
 
 //Function delcarations

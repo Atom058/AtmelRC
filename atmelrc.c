@@ -8,6 +8,7 @@ int main (void) {
 	setup();
 
 	while(1){
+
 		//This loop is continuously running
 
 	}
@@ -27,7 +28,10 @@ void setup(void){
 		//Output pins - resetting everything!
 		PORTB = 0;
 		DDRB = 0;
-		//Enable pullup on pin7/PB2
+
+
+		//Set pin7/PB2 as output, with high level
+		DDRB |= (1<<DDB2);
 		PORTB |= (1<<PB2);
 
 
@@ -44,6 +48,9 @@ void setup(void){
 ISR ( PCINT0_vect ) {
 	
 	//To test: Toggle the corresponding ports of input/output
+
+	PORTB |= (1<<PB0) | (1<<PB1);
+
 
 	if( (PINB>>PINB3) & ~(pb3_state) ){
 		//IF PB3 has changed
