@@ -18,10 +18,10 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 
 ## Pin configuration
 * Pin 1: RESET (not used by program. Tie to Vcc with resistor.)
-* Pin 2: PCINT3, interrupt vector and first channel input
-* Pin 3: PCINT4, interrupt vector and second channel input
+* Pin 2: PCINT3/PB3, interrupt vector and first channel input
+* Pin 3: PCINT4/PB4, interrupt vector and second channel input
 * Pin 4: GND
-* Pin 5: OC0A, PWM output 1
-* Pin 6: OC0B, PWM output 2
-* Pin 7: _Not utilised_
+* Pin 5: PB0/OC0A, PWM output 1
+* Pin 6: PB1/OC0B, PWM output 2
+* Pin 7: PB2 _Not utilised_
 * Pin 8: Vcc
