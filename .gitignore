@@ -1,26 +1,37 @@
-# Object files
+# Custom additions
+*.lss
+*.lst
+*.map
+*.sym
+*.eep
+*.elf
+
+
+# Github preset files
+
+## Object files
 *.o
 *.ko
 *.obj
 *.elf
 
-# Precompiled Headers
+## Precompiled Headers
 *.gch
 *.pch
 
-# Libraries
+## Libraries
 *.lib
 *.a
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+## Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
 
-# Executables
+## Executables
 *.exe
 *.out
 *.app
@@ -28,5 +39,5 @@
 *.x86_64
 *.hex
 
-# Debug files
+## Debug files
 *.dSYM/
