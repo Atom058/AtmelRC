@@ -9,8 +9,8 @@
 	void setup(void);
 
 	//Cosntants
-	#define PWMLOWLEVEL (uint16_t) 1000 //The maximum value of the PWM signal
-	#define PWMHIGHLEVEL (uint16_t) 2000 //The minimum value of the PWM signal
-	#define CONVERSIONFACTOR (float) (255/PWMLOWLEVEL)
+	#define PWMLOWLEVEL (uint16_t) 248 //The minimum value of the PARSED PWM signal 
+	#define PWMHIGHLEVEL (uint16_t) 501 //The maximum value of the PARSED PWM signal
+	// #define CONVERSIONFACTOR (float) (255/(PWMHIGHLEVEL-PWMLOWLEVEL))
 
 #endif

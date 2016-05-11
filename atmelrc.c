@@ -31,32 +31,53 @@ int main (void) {
 		}
 
 
-		//Calculates the values of the PWM 8-bit output signals 255 * (value-1000)/1000
-		PWM_outA = CONVERSIONFACTOR * ( inputA_value - PWMLOWLEVEL );
-		PWM_outB = CONVERSIONFACTOR * ( inputB_value - PWMLOWLEVEL );
+		//Calculates the values of the PWM 8-bit output signals. 
+		// 	The inputB_value is matched almost 1-1 for 8bits.
+		if(inputA_value >= PWMLOWLEVEL){
+			
+			PWM_outA = inputA_value - PWMLOWLEVEL;
+
+		} else {
+
+			PWM_outA = 0;
+
+		}
+
+		if(inputB_value >= PWMLOWLEVEL){
+
+			PWM_outB = inputB_value - PWMLOWLEVEL;
+
+		} else {
+
+			PWM_outB = 0;
+
+		}
 
 
 		// Set PWM output for channel A
-		if( PWM_outA > 255) {
+		if( PWM_outA >= 240) {
 
 			OCR0A = 255;
+			// PORTB &= ~(_BV(PB2));
 
-		} else if ( PWM_outA < 0 ){
+		} else if ( PWM_outA <= 15 ){
 
 			OCR0A = 0;
+			// PORTB &= ~(_BV(PB2));
 
 		} else {
 
 			OCR0A = (uint8_t) PWM_outA;
+			// PORTB |= _BV(PB2);
 
 		}
 
 		// Set PWM output for channel B
-		if( PWM_outB > 255) {
+		if( PWM_outB >= 240) {
 
 			OCR0B = 255;
 
-		} else if ( PWM_outB < 0 ){
+		} else if ( PWM_outB <= 15 ){
 
 			OCR0B = 0;
 
@@ -100,8 +121,8 @@ void setup(void){
 		while( (PLLCSR & _BV(PLOCK)) == 0 ); //Wait for PLL to lock in
 		PLLCSR |= _BV(PCKE);
 		TCCR1 |= _BV(CS12); //Set clock to PCK/8, giving a resolution of 8 counts per µs
-		TCCR1 |= _BV(CTC1); //Reset timer after OCR1C match
-		OCR1C = 8; //Number of counts for 1 µs
+		TCCR1 |= _BV(CTC1) | _BV(PWM1A); //Reset timer after OCR1C match, and activate "PWM" mode
+		OCR1C = 30; //Number of counts for 5 µs
 		TIMSK |= _BV(TOIE1);//Enable overflow interrupt
 
 
@@ -113,13 +134,11 @@ void setup(void){
 ISR( TIMER1_OVF_vect ){
 
 	//Function to calculate µs of the signal
-	cli();
 	if(signalA) {
-		counterA++; //Add another 1µs to the counter. 
+		counterA = counterA + 1; //Add another tic to the counter. 
 	} else if(signalB){
-		counterB++;
+		counterB = counterB + 1; //Add another tic to the counter. 
 	}
-	sei();
 
 }
 
