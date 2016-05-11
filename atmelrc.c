@@ -22,21 +22,20 @@ void setup(void){
 	//Setup of the two input pins, adding interrupts
 	
 		//Interrupts
-		GIMSK |= (1<<PCIE);
-		PCMSK = (1<<PCINT3) | (1<<PCINT4);
+		GIMSK |= _BV(PCIE);
+		PCMSK = _BV(PCINT3) | _BV(PCINT4);
 
 		//Output pins - resetting everything!
-		PORTB = 0;
-		DDRB = 0;
+		PORTB = _BV(0);
+		DDRB = _BV(0);
 
 
 		//Set pin7/PB2 as output, with high level
-		DDRB |= (1<<DDB2);
-		PORTB |= (1<<PB2);
+		PORTB |= _BV(PB2);
 
 
 	//Setup of output pins
-		DDRB |= (1<<DDB0) | (1<<DDB1);
+		DDRB |= _BV(DDB0) | _BV(DDB1);
 
 	//Setup of PWM modes
 
@@ -49,26 +48,26 @@ ISR ( PCINT0_vect ) {
 	
 	//To test: Toggle the corresponding ports of input/output
 
-	PORTB |= (1<<PB0) | (1<<PB1);
+	// PORTB |= _BV(PB0) | _BV(PB1);
 
 
 	if( (PINB>>PINB3) & ~(pb3_state) ){
 		//IF PB3 has changed
 
 		//record new state of pb3
-		pb3_state = (PINB>>PINB3) & 1;
+		pb3_state = (PINB>>PINB3) & _BV(1);
 
 		//Toggle pin 0
-		PORTB |= (1<<PB0);
+		PORTB ^= _BV(PB0);
 
 	} else if ( (PINB>>PINB4) & ~(pb4_state) ){
 		//IF PB4 has changed
 
-		//record new state of pb3
-		pb4_state = (PINB>>PINB4) & 1;
+		//record new state of pb4
+		pb4_state = (PINB>>PINB4) & _BV(1);
 
-		//Toggle pin 0
-		PORTB |= (1<<PB1);
+		//Toggle pin 1
+		PORTB ^= _BV(PB1);
 
 	}
 
