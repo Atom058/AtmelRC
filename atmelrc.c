@@ -16,9 +16,7 @@ int main (void) {
 	while(1){
 
 		//This loop is continuously running
-		// PORTB ^= ~(_BV(PB2));
-		// pb3_state = pb4_state;
-
+	
 	}
 
 }
@@ -27,13 +25,8 @@ void setup(void){
 
 	cli(); //Disable interrupts temoprarily
 
-	//Test by setting other output pins!
-	DDRB |= _BV(DDB2) | _BV(DDB3);
-	PORTB |= _BV(PB3);
-	// DDRB |= _BV(DDB4);
-	// PORTB &= ~(_BV(PB3) | _BV(PB4));
-
-	
+	//Internal Crystal calibration
+	OSCCAL = 0b01011000;
 
 	//Setup of the two input pins, adding interrupts
 	
@@ -49,8 +42,8 @@ void setup(void){
 	//Setup of Timer1 for time-keeping
 
 	//Setup of Timer0 for PWM modes
-		TCCR0B |= _BV(CS00); //Set clock to CLKio/256, activating PWM
-		TCCR0A |= _BV(WGM00) | _BV(WGM01); //Set Phase-correct PWM mode
+		TCCR0B |= _BV(CS01); //Set clock to CLK/8, activating PWM
+		TCCR0A |= _BV(WGM00); //Set Phase-correct PWM mode
 		OCR0A = PWM_outA; //Set the inital compare levels for outA
 		OCR0B = PWM_outB; //Set the inital compare levels for outB
 		DDRB |= _BV(DDB0) | _BV(DDB1); // Set pins as output
@@ -63,8 +56,6 @@ void setup(void){
 }
 
 ISR( TIMER0_OVF_vect ){
-
-	PORTB |= _BV(PB2);
 
 	counterA++;
 	if(counterA > 50){
