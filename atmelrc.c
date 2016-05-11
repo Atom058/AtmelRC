@@ -18,74 +18,74 @@ int main (void) {
 
 	while(1){
 
-		if( counterA && !signalA ){
-			//If the counter has measured a time, and the signal is no longer present
-			inputA_value = counterA;
-			counterA = 0;
-		}
+		// input value parsing
+			if( counterA && !signalA ){
+				//If the counter has measured a time, and the signal is no longer present
+				inputA_value = counterA;
+				counterA = 0;
+			}
 
-		if( counterB && !signalB ){
-			//If the counter has measured a time, and the signal is no longer present
-			inputB_value = counterB;
-			counterB = 0;
-		}
+			if( counterB && !signalB ){
+				//If the counter has measured a time, and the signal is no longer present
+				inputB_value = counterB;
+				counterB = 0;
+			}
 
 
 		//Calculates the values of the PWM 8-bit output signals. 
 		// 	The inputB_value is matched almost 1-1 for 8bits.
-		if(inputA_value >= PWMLOWLEVEL){
-			
-			PWM_outA = inputA_value - PWMLOWLEVEL;
+			if(inputA_value >= PWMLOWLEVEL){
+				
+				PWM_outA = inputA_value - PWMLOWLEVEL;
 
-		} else {
+			} else {
 
-			PWM_outA = 0;
+				PWM_outA = 0;
 
-		}
+			}
 
-		if(inputB_value >= PWMLOWLEVEL){
+			if(inputB_value >= PWMLOWLEVEL){
 
-			PWM_outB = inputB_value - PWMLOWLEVEL;
+				PWM_outB = inputB_value - PWMLOWLEVEL;
 
-		} else {
+			} else {
 
-			PWM_outB = 0;
+				PWM_outB = 0;
 
-		}
+			}
 
 
-		// Set PWM output for channel A
-		if( PWM_outA >= 240) {
+		// Set PWM output for channels A & B
+			if( PWM_outA >= 240) { //Channel A
 
-			OCR0A = 255;
-			// PORTB &= ~(_BV(PB2));
+				OCR0A = 255;
+				// PORTB &= ~(_BV(PB2));
 
-		} else if ( PWM_outA <= 15 ){
+			} else if ( PWM_outA <= 15 ){
 
-			OCR0A = 0;
-			// PORTB &= ~(_BV(PB2));
+				OCR0A = 0;
+				// PORTB &= ~(_BV(PB2));
 
-		} else {
+			} else {
 
-			OCR0A = (uint8_t) PWM_outA;
-			// PORTB |= _BV(PB2);
+				OCR0A = (uint8_t) PWM_outA;
+				// PORTB |= _BV(PB2);
 
-		}
+			}
 
-		// Set PWM output for channel B
-		if( PWM_outB >= 240) {
+			if( PWM_outB >= 240) { //Channel B
 
-			OCR0B = 255;
+				OCR0B = 255;
 
-		} else if ( PWM_outB <= 15 ){
+			} else if ( PWM_outB <= 15 ){
 
-			OCR0B = 0;
+				OCR0B = 0;
 
-		} else {
+			} else {
 
-			OCR0B = (uint8_t) PWM_outB;
+				OCR0B = (uint8_t) PWM_outB;
 
-		}
+			}
 
 	}
 
