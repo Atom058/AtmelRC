@@ -3,6 +3,12 @@
 uint8_t pb3_state = 0;
 uint8_t pb4_state = 0;
 
+uint16_t counterA = 0;
+uint16_t counterB = 0;
+
+uint8_t PWM_outA = 127;
+uint8_t PWM_outB = 0;
+
 int main (void) {
 
 	setup();
@@ -10,6 +16,8 @@ int main (void) {
 	while(1){
 
 		//This loop is continuously running
+		// PORTB ^= ~(_BV(PB2));
+		// pb3_state = pb4_state;
 
 	}
 
@@ -19,40 +27,90 @@ void setup(void){
 
 	cli(); //Disable interrupts temoprarily
 
+	//Test by setting other output pins!
+	DDRB |= _BV(DDB2) | _BV(DDB3);
+	PORTB |= _BV(PB3);
+	// DDRB |= _BV(DDB4);
+	// PORTB &= ~(_BV(PB3) | _BV(PB4));
+
+	
+
 	//Setup of the two input pins, adding interrupts
 	
 		//Interrupts
-		GIMSK |= _BV(PCIE);
-		PCMSK = _BV(PCINT3) | _BV(PCINT4);
-
-		//Output pins - resetting everything!
-		PORTB = _BV(0);
-		DDRB = _BV(0);
-
+		// GIMSK |= _BV(PCIE);
+		// PCMSK = _BV(PCINT3) | _BV(PCINT4);
 
 		//Set pin7/PB2 as output, with high level
-		PORTB |= _BV(PB2);
+		// DDRB |= _BV(DDB2);
+		// PORTB |= _BV(PB2);
 
 
-	//Setup of output pins
-		DDRB |= _BV(DDB0) | _BV(DDB1);
+	//Setup of Timer1 for time-keeping
 
-	//Setup of PWM modes
+	//Setup of Timer0 for PWM modes
+		TCCR0B |= _BV(CS00); //Set clock to CLKio/256, activating PWM
+		TCCR0A |= _BV(WGM00) | _BV(WGM01); //Set Phase-correct PWM mode
+		OCR0A = PWM_outA; //Set the inital compare levels for outA
+		OCR0B = PWM_outB; //Set the inital compare levels for outB
+		DDRB |= _BV(DDB0) | _BV(DDB1); // Set pins as output
+		TCCR0A |= _BV(COM0A1) | _BV(COM0B1); //Set pins as PWM outputs
+		TIMSK |= _BV(TOIE0); //Enable interrupts
+		
 
 	sei(); //Enable interrupts again
 
 }
 
+ISR( TIMER0_OVF_vect ){
+
+	PORTB |= _BV(PB2);
+
+	counterA++;
+	if(counterA > 50){
+		counterA = 0;
+		OCR0A = OCR0A + 1;
+		OCR0B = OCR0B + 1;
+	}
+
+	// PORTB ^= ~(_BV(PB4)); //Toggle PB4
+
+}
+
+ISR( TIMER0_COMPA_vect ) {
+
+	counterA++;
+
+	if(counterA > 10000){
+		counterA = 0;
+		PWM_outA += 10;
+		OCR0A = _BV(PWM_outA);
+	}
+
+}
+
+ISR( TIMER0_COMPB_vect ) {
+
+	counterB++;
+
+	if(counterB > 10000){
+		counterB = 0;
+		PWM_outB += 10;
+		OCR0B = _BV(PWM_outB);
+	}
+
+}
+
 //Interrupt vectors
-ISR ( PCINT0_vect ) {
+ISR( PCINT0_vect ) {
 	
 	//To test: Toggle the corresponding ports of input/output
 
 	// PORTB |= _BV(PB0) | _BV(PB1);
-
-
+/*
 	if( (PINB>>PINB3) & ~(pb3_state) ){
 		//IF PB3 has changed
+
 
 		//record new state of pb3
 		pb3_state = (PINB>>PINB3) & _BV(1);
@@ -71,4 +129,7 @@ ISR ( PCINT0_vect ) {
 
 	}
 
+*/
+
 }
+
