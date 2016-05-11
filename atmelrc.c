@@ -122,7 +122,7 @@ void setup(void){
 		PLLCSR |= _BV(PCKE);
 		TCCR1 |= _BV(CS12); //Set clock to PCK/8, giving a resolution of 8 counts per µs
 		TCCR1 |= _BV(CTC1) | _BV(PWM1A); //Reset timer after OCR1C match, and activate "PWM" mode
-		OCR1C = 30; //Number of counts for 5 µs
+		OCR1C = 30; //Number of counts for 4 µs
 		TIMSK |= _BV(TOIE1);//Enable overflow interrupt
 
 
