@@ -7,11 +7,11 @@ The program will initially not aim to reduce power consumption. The assumption i
 This will be a brief guide of how to configure everything to work!
 
 ## Getting the tools
-The toolchain used by the author was provided through [Win-AVR](http://winavr.sourceforge.net/). This toolchain is compatible with Windows, but the "originals" are living in UNIX.
+The toolchain used by the author was provided through [WIN-AVR][Win-AVR link]. This toolchain is compatible with Windows, but the "originals" are living in UNIX.
 
 The files are prepared so that a chip can be programmed with [avrdude](http://www.nongnu.org/avrdude/) or similar (included in Win-AVR package).
 
-Finally, a programmer is needed. The simplest form is probably an arduino, or a [USBASP](http://www.fischl.de/usbasp/). The list of avrdude's supported programmers [can be found here][avrdude syntax documentation]
+Finally, a programmer is needed. The simplest form is probably an arduino, or a [USBASP][USBASP link]. The list of avrdude's supported programmers [can be found here][avrdude syntax documentation]
 
 
 ## Fuses and selection of clock sources
@@ -51,4 +51,13 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 * Pin 7: PB2 _Not utilised_
 * Pin 8: Vcc
 
+# External resources
+* [WIN-AVR][WIN-AVR link]
+* [USBASP programmers][USBASP link]
+* [AVR-LIBC library](http://www.nongnu.org/avr-libc/)
+* [Fuse calculator for atmel chips](http://www.engbedded.com/fusecalc/)
+* [General troubleshooting at AVR Freaks](http://avrfreaks.net/)
+
 [avrdude syntax documentation]: http://www.nongnu.org/avrdude/user-manual/avrdude_4.html#Option-Descriptions
+[Win-AVR link]:(http://winavr.sourceforge.net/)
+[USBASP link]:(http://www.fischl.de/usbasp/)
