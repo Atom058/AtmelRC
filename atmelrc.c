@@ -1,15 +1,15 @@
 #include <atmelrc.h>
 
-uint8_t signalA = 0;
-uint8_t signalB = 0;
+volatile uint8_t signalA = 0;
+volatile uint8_t signalB = 0;
 
-uint16_t counterA = 0;
-uint16_t counterB = 0;
+volatile uint16_t counterA = 0;
+volatile uint16_t counterB = 0;
 
 int16_t inputA_value = 0;
 int16_t inputB_value = 0;
 
-uint16_t PWM_outA = 127;
+uint16_t PWM_outA = 0;
 uint16_t PWM_outB = 0;
 
 int main (void) {
@@ -17,7 +17,6 @@ int main (void) {
 	setup();
 
 	while(1){
-
 
 		if( counterA && !signalA ){
 			//If the counter has measured a time, and the signal is no longer present
@@ -67,8 +66,6 @@ int main (void) {
 
 		}
 
-
-
 	}
 
 }
@@ -81,6 +78,8 @@ void setup(void){
 	//Internal Crystal calibration
 		OSCCAL = 0b01011000;
 
+	//Use pin2 as debug
+		DDRB |= _BV(DDB2);
 
 	//Setup of the two input pins, adding interrupts
 		GIMSK |= _BV(PCIE);
@@ -94,7 +93,6 @@ void setup(void){
 		OCR0B = PWM_outB; //Set the inital compare levels for outB
 		DDRB |= _BV(DDB0) | _BV(DDB1); // Set pins as output
 		TCCR0A |= _BV(COM0A1) | _BV(COM0B1); //Set pins as PWM outputs
-		// TIMSK |= _BV(TOIE0); //Enable overflow interrupt
 
 
 	//Setup of Timer1 for time-keeping
@@ -111,6 +109,7 @@ void setup(void){
 
 }
 
+
 ISR( TIMER1_OVF_vect ){
 
 	//Function to calculate µs of the signal
@@ -124,23 +123,13 @@ ISR( TIMER1_OVF_vect ){
 
 }
 
-ISR( TIMER0_OVF_vect ){
-
-/*	counterA++;
-	if(counterA > 50){
-		counterA = 0;
-		OCR0A = OCR0A + 1;
-		OCR0B = OCR0B + 1;
-	}*/
-
-}
 
 ISR( PCINT0_vect ) {
 
 	//Sets signal values
 	signalA = (PINB>>PINB3) & 1;
 	signalB = (PINB>>PINB4) & 1;
-	
+
 }
 
 
