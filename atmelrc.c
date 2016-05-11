@@ -97,7 +97,7 @@ void setup(void){
 
 
 	//Internal Crystal calibration
-		OSCCAL = 0b01011000;
+		OSCCAL = INTERNALOSCILLATORCALIBRATION;
 
 	//Use pin2 as debug
 		DDRB |= _BV(DDB2);

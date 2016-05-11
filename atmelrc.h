@@ -12,6 +12,7 @@
 	#define PWMLOWLEVEL (uint16_t) 248 //The minimum value of the PARSED PWM signal 
 	#define PWMHIGHLEVEL (uint16_t) 501 //The maximum value of the PARSED PWM signal
 	#define TIMERESOLUTION (uint8_t) 4 //4µs per tic
+	#define INTERNALOSCILLATORCALIBRATION 0b01011000
 	// #define CONVERSIONFACTOR (float) (255/(PWMHIGHLEVEL-PWMLOWLEVEL))
 
 #endif
