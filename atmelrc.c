@@ -164,7 +164,7 @@ void setup(void){
 
 		
 	//Setup of Timer0 for PWM modes
-		TCCR0B |= _BV(CS01); //Set clock to CLK/8, activating PWM
+		TCCR0B |= _BV(CS01); //Set clock to CLK/8, activating PWM with a frequency of approximately 4 KHz
 		TCCR0A |= _BV(WGM00); //Set Phase-correct PWM mode
 		OCR0A = PWM_outA; //Set the inital compare levels for outA
 		OCR0B = PWM_outB; //Set the inital compare levels for outB
@@ -178,7 +178,7 @@ void setup(void){
 		PLLCSR |= _BV(PCKE);
 		TCCR1 |= _BV(CS12); //Set clock to PCK/8, giving a resolution of 8 counts per µs
 		TCCR1 |= _BV(CTC1) | _BV(PWM1A); //Reset timer after OCR1C match, and activate "PWM" mode
-		OCR1C = 30; //Number of counts for 4 µs
+		OCR1C = (uint8_t) TIMERESOLUTION * 7.5; //Number of counts for 4 µs
 		TIMSK |= _BV(TOIE1);//Enable overflow interrupt
 
 
@@ -282,12 +282,14 @@ void sweepPWMout(uint8_t toggle){
 	if(toggle) {
 
 		TIMSK |= _BV(TOIE0); //Enable interrupt on PWM overflow
+		TCCR0B |= _BV(CS00); //Slow down of PWM output to ~500Hz
 		OCR0A = 0;
 		OCR0B = 127;
 
 	} else {
 
 		TIMSK &= ~(_BV(TOIE0)); //Disable interrupt on PWM overflow
+		TCCR0B &= ~(_BV(CS00)); //Restore PWM output to ~4KHz
 
 	}
 
