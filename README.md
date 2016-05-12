@@ -1,7 +1,7 @@
 # AtmelRC
 A project to parse RC PWM signals with an ATTiny85. It might be possible to use other Atmel chips as well, but the program was aimed at the capabilities of the ATTiny85. There are probably some registries which needs to be updated in order for it to work with other devices. No warranties ;).
 
-The program will initially not aim to reduce power consumption. The assumption is that the other RC equipment will consume significantly more power, making the contribution from the ATTiny insignificant in comparison.
+The program will initially not aim to reduce power consumption. The assumption is that the other RC equipment will consume significantly more power, making the contribution from the ATTiny85 insignificant in comparison.
 
 The firmware features a calibration mode to ensure that the full output is made available.
 
@@ -13,15 +13,15 @@ The toolchain used by the author was provided through [WIN-AVR][WIN-AVR link]. T
 
 The files are prepared so that a chip can be programmed with [avrdude](http://www.nongnu.org/avrdude/) or similar (included in Win-AVR package).
 
-Finally, a programmer is needed. The simplest form is probably an arduino, or a [USBASP][USBASP link]. The list of avrdude's supported programmers [can be found here][avrdude syntax documentation]
+Finally, a programmer is needed. The simplest form is probably an Arduino, or a [USBASP][USBASP link]. The list of avrdude's supported programmers [can be found here][avrdude syntax documentation].
 
 
 ## Fuses and selection of clock sources
-The ATTiny will run on the Internal PPL clock as clk(CPU). This will results in a nominal frequency of 16MHz, which is sufficient to be able to read the PWM input. The clock source is set by configuring the fuses of the microcontroller.
+The ATTiny85 will run on the Internal PPL clock as clk(CPU). This will result in a nominal frequency of 16MHz, which is sufficient to be able to read the PWM input. The clock source is set by configuring the fuses of the microcontroller.
 
 The fuses are set to preserve EEPROM settings during chip-erase cycles. This means that the calibration settings stored in the EEPROM are not erased during a firmware update. 
 
-Because the PWM signal is highly sensitive to differences, it is not guaranteed that the full output will be available. In order to ensure this, it can be a good idea to calibrate the internal ocillator of the chip. How to do this is explained in the datasheet of the microcontroller. In essence: 
+Because the PWM signal is highly sensitive to differences, it is not guaranteed that the full output will be available. In order to ensure this, it can be a good idea to calibrate the internal oscillator of the chip. How to do this is explained in the datasheet of the microcontroller. In essence: 
 
 * The system clock can be seen on the CLKI pin by configuring a fuse
 * The internal clock can be read by an external instrument (e.g. multimeter)
@@ -38,7 +38,7 @@ The fuse settings can be written using [avrdude][avrdude syntax documentation], 
 avrdude -p t85 -U lfuse:w:0xe1:m -U hfuse:w:0xd7:m -U efuse:w:0xff:m
 ```
 
-## Burning the software to the ATMEL
+## Burning the software to the ATTiny85
 This is the easy part! [Simply use avrdude][avrdude syntax documentation], as such:
 
 ```
@@ -46,7 +46,7 @@ avrdude -p t85 -U flash:w:atmelrc.hex:h
 ```
 
 ## Calibration of PWM output
-THe output of the PWM is dependent on how the ingoing signals gets processed. To ensure a proper and full operation, a calibration of the device is needed. The process of calibration is explained in the steps below
+The output of the PWM is dependent on how the ingoing signals gets processed. To ensure a proper and full operation, a calibration of the device is needed. The process of calibration is explained in the steps below
 
 1. Connect the GND of the ATTiny85 with the GND for the RC receiver
 1. Connect the signal cables to PB3 (_Pin 2_) and PB4 (_Pin 3_) for channel A and channel B respectively.
@@ -82,7 +82,7 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 * [WIN-AVR][WIN-AVR link]
 * [USBASP programmers][USBASP link]
 * [AVR-LIBC library](http://www.nongnu.org/avr-libc/)
-* [Fuse calculator for atmel chips](http://www.engbedded.com/fusecalc/)
+* [Fuse calculator for Atmel chips](http://www.engbedded.com/fusecalc/)
 * [General troubleshooting at AVR Freaks](http://avrfreaks.net/)
 
 [avrdude syntax documentation]: http://www.nongnu.org/avrdude/user-manual/avrdude_4.html#Option-Descriptions
