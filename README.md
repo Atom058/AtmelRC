@@ -61,7 +61,7 @@ The output of the PWM is dependent on how the ingoing signals gets processed. To
 	1. Channel B, middle (PB0 & PB1 flashing)
 1. __NOTE__: the middle position for A is only visible if Channel B is not present. Both outputs flashing indicates calibration done!
 1. Disconnect __PB2__ from VCC. The calibration values is stored to EEPROM, making them persistent. __IMPORTANT__: _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_.
-1. DONE! The maximum and minimum values are now stored.
+1. DONE! The maximum and minimum values are now stored. __NOTE__: The calibration values will not be updated unless the entire motion of one channel is completed. Channel B should therefore not update if only Channel A was calibrated. 
 
 ## Pins
 The inputs from the RC receiver are tied to hardware interrupts on the ATTiny85. This means that the timing pulse will initiate an interrupt vector in software, where the timekeeping will begin and end.

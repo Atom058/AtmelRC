@@ -29,6 +29,7 @@
 	uint16_t NEW_inputB_MIN = 0; //Temp save for new values
 
 	uint8_t calA_done = 0;
+	uint8_t calB_done = 0;
 
 	float conversionA = 0; //Conversion factor from input > PWM out
 	float conversionB = 0; //Conversion factor from input > PWM out
@@ -64,10 +65,14 @@ int main (void) {
 
 			if(!calibrationINIT){
 				//Resets the calibration levels
-				NEW_inputA_MIN = 0;//inputA_value;
-				NEW_inputA_MAX = 0;//inputA_value;
-				NEW_inputB_MIN = 0;//inputB_value;
-				NEW_inputB_MAX = 0;//inputB_value;
+					NEW_inputA_MIN = 0;//inputA_value;
+					NEW_inputA_MAX = 0;//inputA_value;
+					NEW_inputB_MIN = 0;//inputB_value;
+					NEW_inputB_MAX = 0;//inputB_value;
+
+				//Also reset lingering input values. Needed for persistant channel B calibration.
+					inputA_value = 0;
+					inputB_value = 0;
 
 				calibrationINIT = 1; //Will not enter this section next loop
 				
@@ -133,6 +138,7 @@ int main (void) {
 							} else if (inputB_value >= NEW_inputB_MIN + 20){
 
 								DDRB |= _BV(DDB1); //Re-enable PWM signal to indicate calibration complete
+								calB_done = 1;
 
 							}
 
@@ -147,22 +153,24 @@ int main (void) {
 
 			cli(); //Disable interrupts when saving data
 
-			//Save in current session
-				inputA_MAX = NEW_inputA_MAX;
-				inputA_MIN = NEW_inputA_MIN;
-				inputB_MAX = NEW_inputB_MAX;
-				inputB_MIN = NEW_inputB_MIN;
+			//Save in current session and update memory locations. This might take some time...
+				if(calA_done){
 
-				NEW_inputA_MIN = 0;
-				NEW_inputA_MAX = 0;
-				NEW_inputB_MIN = 0;
-				NEW_inputB_MAX = 0;
+					inputA_MAX = NEW_inputA_MAX;
+					inputA_MIN = NEW_inputA_MIN;
+					eeprom_update_word(AMAX, inputA_MAX);
+					eeprom_update_word(AMIN, inputA_MIN);
+	
+				}
 
-			//Update memory locations. This might take some time...
-				eeprom_update_word(AMAX, inputA_MAX);
-				eeprom_update_word(AMIN, inputA_MIN);
-				eeprom_update_word(BMAX, inputB_MAX);
-				eeprom_update_word(BMIN, inputB_MIN);
+				if(calB_done){
+
+					inputB_MAX = NEW_inputB_MAX;
+					inputB_MIN = NEW_inputB_MIN;
+					eeprom_update_word(BMAX, inputB_MAX);
+					eeprom_update_word(BMIN, inputB_MIN);
+					
+				}
 
 			//Update conversion factors
 				calculateConversionFactor();
@@ -171,6 +179,7 @@ int main (void) {
 				counterC = 0; //Debounce timer
 				calibrationINIT = 0;
 				calA_done = 0;
+				calB_done = 0;
 				save = 0;
 				sweepPWMout(0); //Turn of PWM sweeping
 
