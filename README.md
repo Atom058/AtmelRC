@@ -9,7 +9,7 @@ The firmware features a calibration mode to ensure that the full output is made 
 This will be a brief guide of how to configure everything to work!
 
 ## Getting the tools
-The toolchain used by the author was provided through [WIN-AVR][Win-AVR link]. This toolchain is compatible with Windows, but the "originals" are living in UNIX.
+The toolchain used by the author was provided through [WIN-AVR][WIN-AVR link]. This toolchain is compatible with Windows, but the "originals" are living in UNIX.
 
 The files are prepared so that a chip can be programmed with [avrdude](http://www.nongnu.org/avrdude/) or similar (included in Win-AVR package).
 
@@ -86,5 +86,5 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 * [General troubleshooting at AVR Freaks](http://avrfreaks.net/)
 
 [avrdude syntax documentation]: http://www.nongnu.org/avrdude/user-manual/avrdude_4.html#Option-Descriptions
-[Win-AVR link]:(http://winavr.sourceforge.net/)
-[USBASP link]:(http://www.fischl.de/usbasp/)
+[WIN-AVR link]:http://winavr.sourceforge.net/
+[USBASP link]:http://www.fischl.de/usbasp/
