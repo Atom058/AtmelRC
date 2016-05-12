@@ -45,8 +45,15 @@ THe output of the PWM is dependent on how the ingoing signals gets processed. To
 1. Connect the signal cables to PB3 (_Pin 2_) and PB4 (_Pin 3_) for channel A and channel B respectively.
 1. Connect PB2 (_Pin 7_) to VCC to initiate calibration
 1. The output PWM signals will start flashing to signal ongoing calibration.
-1. Move the input of the remote to the MAX/MIN values. These values will be stored by the ATTiny85.
-1. Disconnect __PB2__ from VCC. __IMPORTANT:__ _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_.
+1. The calibration is done in the following order:
+	1. Channel A, high (PB1 flashing)
+	1. Channel A, low (PB0 flashing)
+	1. Channel A, middle (PB0 & PB1 flashing)
+	1. Channel B, high (PB1 flashing)
+	1. Channel B, low (PB1 flashing)
+	1. Channel B, middle (PB0 & PB1 flashing)
+1. __NOTE__: the middle position for A is only visible if Channel B is not present. Both outputs flashing indicates calibration done!
+1. Disconnect __PB2__ from VCC. __IMPORTANT:__ _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_. The calibration values is stored to EEPROM, making them persistent.
 1. DONE! The maximum and minimum values are now stored.
 
 ## Pins
