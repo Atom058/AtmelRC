@@ -21,6 +21,10 @@
 	uint16_t inputA_MIN = 0; //Is read from memory at startup
 	uint16_t inputB_MAX = 0; //Is read from memory at startup
 	uint16_t inputB_MIN = 0; //Is read from memory at startup
+	uint16_t *AMAX = &inputA_MAX;
+	uint16_t *AMIN = &inputA_MIN;
+	uint16_t *BMAX = &inputB_MAX;
+	uint16_t *BMIN = &inputB_MIN;
 
 	uint16_t NEW_inputA_MAX = 0; //Temp save for new values
 	uint16_t NEW_inputA_MIN = 0; //Temp save for new values
@@ -112,10 +116,10 @@ int main (void) {
 				inputB_MIN = NEW_inputB_MIN;
 
 			//Update memory locations. This might take some time...
-				eeprom_update_word(A_HIGH_MEM, inputA_MAX);
-				eeprom_update_word(A_LOW_MEM, inputA_MIN);
-				eeprom_update_word(B_HIGH_MEM, inputB_MAX);
-				eeprom_update_word(B_LOW_MEM, inputB_MIN);
+				eeprom_update_word(AMAX, inputA_MAX);
+				eeprom_update_word(AMIN, inputA_MIN);
+				eeprom_update_word(BMAX, inputB_MAX);
+				eeprom_update_word(BMIN, inputB_MIN);
 
 			//Update conversion factors
 				calculateConversionFactor();
@@ -146,10 +150,10 @@ void setup(void){
 		OSCCAL = INTERNALOSCILLATORCALIBRATION;
 
 	//Load LOW/HIGH input calibration from EEPROM
-		inputA_MAX = eeprom_read_word(A_HIGH_MEM);
-		inputA_MIN = eeprom_read_word(A_LOW_MEM);
-		inputB_MAX = eeprom_read_word(B_HIGH_MEM);
-		inputB_MIN = eeprom_read_word(B_LOW_MEM);
+		inputA_MAX = eeprom_read_word(AMAX);
+		inputA_MIN = eeprom_read_word(AMIN);
+		inputB_MAX = eeprom_read_word(BMAX);
+		inputB_MIN = eeprom_read_word(BMIN);
 
 		calculateConversionFactor(); //Calculates the PWM conversion factors
 
