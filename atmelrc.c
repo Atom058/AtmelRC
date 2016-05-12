@@ -1,16 +1,40 @@
 #include <atmelrc.h>
 
-volatile uint8_t signalA = 0;
-volatile uint8_t signalB = 0;
+//Tracking input signals
+	volatile uint8_t signalA = 0;
+	volatile uint8_t signalB = 0;
 
-volatile uint16_t counterA = 0;
-volatile uint16_t counterB = 0;
+//Counters for time-keeping
+	volatile uint16_t counterA = 0;
+	volatile uint16_t counterB = 0;
 
-int16_t inputA_value = 0;
-int16_t inputB_value = 0;
+//Input values
+	uint16_t inputA_value = 0;
+	uint16_t inputB_value = 0;
 
-uint16_t PWM_outA = 0;
-uint16_t PWM_outB = 0;
+//Calibration variables
+	volatile uint8_t calibration = 0;
+	uint8_t save = 0;
+	uint8_t calibrationINIT = 0;
+
+	uint16_t inputA_MAX = 0; //Is read from memory at startup
+	uint16_t inputA_MIN = 0; //Is read from memory at startup
+	uint16_t inputB_MAX = 0; //Is read from memory at startup
+	uint16_t inputB_MIN = 0; //Is read from memory at startup
+
+	uint16_t NEW_inputA_MAX = 0; //Temp save for new values
+	uint16_t NEW_inputA_MIN = 0; //Temp save for new values
+	uint16_t NEW_inputB_MAX = 0; //Temp save for new values
+	uint16_t NEW_inputB_MIN = 0; //Temp save for new values
+
+	float conversionA = 0; //Conversion factor from input > PWM out
+	float conversionB = 0; //Conversion factor from input > PWM out
+
+//PWM Outputs
+	uint8_t PWM_outA = 0;
+	uint8_t PWM_outB = 0;
+
+
 
 int main (void) {
 
@@ -32,60 +56,82 @@ int main (void) {
 			}
 
 
-		//Calculates the values of the PWM 8-bit output signals. 
-		// 	The inputB_value is matched almost 1-1 for 8bits.
-			if(inputA_value >= PWMLOWLEVEL){
-				
-				PWM_outA = inputA_value - PWMLOWLEVEL;
+		//Device enters calibration when PB2 is high
+		if(calibration) {
+
+			if(!calibrationINIT){
+				//Resets the calibration levels
+				NEW_inputA_MIN = inputA_value;
+				NEW_inputA_MAX = inputA_value;
+				NEW_inputB_MIN = inputB_value;
+				NEW_inputB_MAX = inputB_value;
+
+				calibrationINIT = 1; //Will not enter this section next loop
+
+				sweepPWMout(1); //Turn on visual indicator of calibration
 
 			} else {
+			
+				//Update A values
+					if(inputA_value > NEW_inputA_MAX){
 
-				PWM_outA = 0;
+						NEW_inputA_MAX = inputA_value;
+						save = 1;
+
+					} else if((inputA_value < NEW_inputA_MIN) && (inputA_value != 0)){
+
+						NEW_inputB_MIN = inputA_value;
+						save = 1;
+
+					}
+
+				//Update B values
+					if(inputB_value > NEW_inputB_MAX){
+
+						NEW_inputB_MAX = inputB_value;
+						save = 1;
+
+					} else if((inputB_value < NEW_inputB_MIN) && (inputB_value != 0)){
+
+						NEW_inputB_MIN = inputB_value;
+						save = 1;
+
+					}
 
 			}
 
-			if(inputB_value >= PWMLOWLEVEL){
 
-				PWM_outB = inputB_value - PWMLOWLEVEL;
+		} else if (save){
 
-			} else {
+			cli(); //Disable interrupts when saving data
 
-				PWM_outB = 0;
+			//Save in current session
+				inputA_MAX = NEW_inputA_MAX;
+				inputA_MIN = NEW_inputA_MIN;
+				inputB_MAX = NEW_inputB_MAX;
+				inputB_MIN = NEW_inputB_MIN;
 
-			}
+			//Update memory locations. This might take some time...
+				eeprom_update_word(A_HIGH_MEM, inputA_MAX);
+				eeprom_update_word(A_LOW_MEM, inputA_MIN);
+				eeprom_update_word(B_HIGH_MEM, inputB_MAX);
+				eeprom_update_word(B_LOW_MEM, inputB_MIN);
 
+			//Update conversion factors
+				calculateConversionFactor();
+			
+			//Reset calibration state
+				save = 0;
+				sweepPWMout(0); //Turn of PWM sweeping
 
-		// Set PWM output for channels A & B
-			if( PWM_outA >= 240) { //Channel A
+			sei(); //Enable interrupts again
 
-				OCR0A = 255;
-				// PORTB &= ~(_BV(PB2));
+		} else {
 
-			} else if ( PWM_outA <= 15 ){
+			//Generate the standard output
+			generatePWMout();
 
-				OCR0A = 0;
-				// PORTB &= ~(_BV(PB2));
-
-			} else {
-
-				OCR0A = (uint8_t) PWM_outA;
-				// PORTB |= _BV(PB2);
-
-			}
-
-			if( PWM_outB >= 240) { //Channel B
-
-				OCR0B = 255;
-
-			} else if ( PWM_outB <= 15 ){
-
-				OCR0B = 0;
-
-			} else {
-
-				OCR0B = (uint8_t) PWM_outB;
-
-			}
+		}
 
 	}
 
@@ -99,12 +145,18 @@ void setup(void){
 	//Internal Crystal calibration
 		OSCCAL = INTERNALOSCILLATORCALIBRATION;
 
-	//Use pin2 as debug
-		DDRB |= _BV(DDB2);
+	//Load LOW/HIGH input calibration from EEPROM
+		inputA_MAX = eeprom_read_word(A_HIGH_MEM);
+		inputA_MIN = eeprom_read_word(A_LOW_MEM);
+		inputB_MAX = eeprom_read_word(B_HIGH_MEM);
+		inputB_MIN = eeprom_read_word(B_LOW_MEM);
 
-	//Setup of the two input pins, adding interrupts
-		GIMSK |= _BV(PCIE);
-		PCMSK = _BV(PCINT3) | _BV(PCINT4);
+		calculateConversionFactor(); //Calculates the PWM conversion factors
+
+	//Setup of the input pins, adding interrupts
+		GIMSK |= _BV(PCIE) | _BV(INT0);
+		PCMSK = _BV(PCINT3) | _BV(PCINT4); //Add interrupts for input pins
+		MCUCR |= _BV(ISC00); //Add interrupt on any change of calibration pin
 
 		
 	//Setup of Timer0 for PWM modes
@@ -131,6 +183,114 @@ void setup(void){
 }
 
 
+
+void generatePWMout(void) {
+
+	//Calculates the values of the PWM 8-bit output signals. 
+
+		//Calculate PWM A
+			if(inputA_value >= inputA_MIN){
+
+				if(inputA_value > inputA_MAX){
+
+					PWM_outA = UINT8_MAX;
+
+				} else {
+
+					PWM_outA = (uint8_t) (inputA_value - inputA_MIN) * conversionA;
+
+				}
+
+			} else {
+
+				PWM_outA = 0;
+
+			}
+
+
+		//Calculate PWM B
+			if(inputB_value >= inputB_MIN){
+
+				if(inputB_value > inputB_MAX){
+
+					PWM_outB = UINT8_MAX;
+
+				} else {
+
+					PWM_outB = (uint8_t) (inputB_value - inputB_MIN) * conversionB;
+
+				}
+
+			} else {
+
+				PWM_outB = 0;
+
+			}
+
+
+	// Set PWM output for channels A & B
+
+		//Channel A
+			if( PWM_outA >= (UINT8_MAX - PWMDEADZONE)) {
+
+				OCR0A = UINT8_MAX;
+
+			} else if ( PWM_outA <= PWMDEADZONE ){
+
+				OCR0A = 0;
+
+			} else {
+
+				OCR0A = PWM_outA;
+
+			}
+
+		//Channel B
+			if( PWM_outB >= (UINT8_MAX - PWMDEADZONE)) {
+
+				OCR0B = UINT8_MAX;
+
+			} else if ( PWM_outB <= PWMDEADZONE ){
+
+				OCR0B = 0;
+
+			} else {
+
+				OCR0B = PWM_outB;
+
+			}
+
+}
+
+
+
+void calculateConversionFactor(void){
+
+	conversionA = 255 * (inputA_MAX - inputA_MIN);
+	conversionB = 255 * (inputB_MAX - inputB_MIN);
+
+}
+
+
+
+void sweepPWMout(uint8_t toggle){
+
+	if(toggle) {
+
+		TIMSK |= _BV(TOIE0); //Enable interrupt on PWM overflow
+		OCR0A = 0;
+		OCR0B = 127;
+
+	} else {
+
+		TIMSK &= ~(_BV(TOIE0)); //Disable interrupt on PWM overflow
+
+	}
+
+}
+
+
+
 ISR( TIMER1_OVF_vect ){
 
 	//Function to calculate µs of the signal
@@ -143,6 +303,7 @@ ISR( TIMER1_OVF_vect ){
 }
 
 
+
 ISR( PCINT0_vect ) {
 
 	//Sets signal values
@@ -152,3 +313,19 @@ ISR( PCINT0_vect ) {
 }
 
 
+
+ISR( INT0_vect ) {
+
+	calibration = (PINB>>PINB2) & 1;
+
+}
+
+
+
+ISR( TIMER0_OVF_vect ){
+
+	//Sweep the PWM signals
+	OCR0A = OCR0A + 1;
+	OCR0B = OCR0B + 1;
+
+}
