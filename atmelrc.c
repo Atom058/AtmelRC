@@ -21,10 +21,6 @@
 	uint16_t inputA_MIN = 0; //Is read from memory at startup
 	uint16_t inputB_MAX = 0; //Is read from memory at startup
 	uint16_t inputB_MIN = 0; //Is read from memory at startup
-	uint16_t *AMAX = &inputA_MAX;
-	uint16_t *AMIN = &inputA_MIN;
-	uint16_t *BMAX = &inputB_MAX;
-	uint16_t *BMIN = &inputB_MIN;
 
 	uint16_t NEW_inputA_MAX = 0; //Temp save for new values
 	uint16_t NEW_inputA_MIN = 0; //Temp save for new values
@@ -63,6 +59,7 @@ int main (void) {
 		//Device enters calibration when PB2 is high
 		if(calibration) {
 
+
 			if(!calibrationINIT){
 				//Resets the calibration levels
 				NEW_inputA_MIN = inputA_value;
@@ -71,7 +68,7 @@ int main (void) {
 				NEW_inputB_MAX = inputB_value;
 
 				calibrationINIT = 1; //Will not enter this section next loop
-
+				
 				sweepPWMout(1); //Turn on visual indicator of calibration
 
 			} else {
@@ -178,7 +175,8 @@ void setup(void){
 		PLLCSR |= _BV(PCKE);
 		TCCR1 |= _BV(CS12); //Set clock to PCK/8, giving a resolution of 8 counts per µs
 		TCCR1 |= _BV(CTC1) | _BV(PWM1A); //Reset timer after OCR1C match, and activate "PWM" mode
-		OCR1C = (uint8_t) TIMERESOLUTION * 7.5; //Number of counts for 4 µs
+		//Setting timer count resolution
+			OCR1C = 50;//TIMERESOLUTION < 4 ? 32 : TIMERESOLUTION * 8;
 		TIMSK |= _BV(TOIE1);//Enable overflow interrupt
 
 

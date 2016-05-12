@@ -17,12 +17,10 @@
 	#define INTERNALOSCILLATORCALIBRATION 0b01011000
 	#define PWMDEADZONE (uint8_t) 15
 
-	// #define PWMLOWLEVEL (uint16_t) 248 //The minimum value of the PARSED PWM signal 
-	// #define PWMHIGHLEVEL (uint16_t) 501 //The maximum value of the PARSED PWM signal
-	// //Memory locations. Not sure if this is the way to go?
-	// #define A_HIGH_MEM (uint16_t) 0
-	// #define A_LOW_MEM (uint16_t) 2
-	// #define B_HIGH_MEM (uint16_t) 4
-	// #define B_LOW_MEM (uint16_t) 6
+	//Memory addresses of stored calibration. Randomly spaced #YOLO
+	#define AMAX (uint16_t*) 0x00
+	#define AMIN (uint16_t*) 0x04
+	#define BMAX (uint16_t*) 0x08
+	#define BMIN (uint16_t*) 0x0a
 
 #endif
