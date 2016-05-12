@@ -34,16 +34,16 @@ Because the PWM signal is highly sensitive to differences, it is not guaranteed 
 * Efuse: 0xFF
 
 The fuse settings can be written using [avrdude][avrdude syntax documentation], as such:
---
+```
 avrdude -p t85 -U lfuse:w:0xe1:m -U hfuse:w:0xd7:m -U efuse:w:0xff:m
---
+```
 
 ## Burning the software to the ATMEL
 This is the easy part! [Simply use avrdude][avrdude syntax documentation], as such:
 
---
+```
 avrdude -p t85 -U flash:w:atmelrc.hex:h
---
+```
 
 ## Calibration of PWM output
 THe output of the PWM is dependent on how the ingoing signals gets processed. To ensure a proper and full operation, a calibration of the device is needed. The process of calibration is explained in the steps below
