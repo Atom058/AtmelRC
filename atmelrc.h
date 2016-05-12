@@ -12,9 +12,11 @@
 	void sweepPWMout(uint8_t toggle);
 	void calculateConversionFactor(void);
 
-	//Constants
-	#define TIMERESOLUTION (uint8_t) 4 //µs per tic. A low value will not improve accuracy due to overheads.
-	#define INTERNALOSCILLATORCALIBRATION 0b01011000
+	// Clock Calibration
+		#define INTERNALOSCILLATORCALIBRATION 0b01011000
+		#define TIMERESOLUTION (uint8_t) 4 //µs per tic. 4µs is maximum resolution, and the standard setting.
+
+	//Deadzone on both high and low ends. 15 is ~5% of 255.
 	#define PWMDEADZONE (uint8_t) 15
 
 	//Memory addresses of stored calibration. Randomly spaced #YOLO

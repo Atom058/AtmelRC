@@ -123,6 +123,7 @@ int main (void) {
 			
 			//Reset calibration state
 				save = 0;
+				calibrationINIT = 0;
 				sweepPWMout(0); //Turn of PWM sweeping
 
 			sei(); //Enable interrupts again
@@ -176,7 +177,7 @@ void setup(void){
 		TCCR1 |= _BV(CS12); //Set clock to PCK/8, giving a resolution of 8 counts per µs
 		TCCR1 |= _BV(CTC1) | _BV(PWM1A); //Reset timer after OCR1C match, and activate "PWM" mode
 		//Setting timer count resolution
-			OCR1C = 50;//TIMERESOLUTION < 4 ? 32 : TIMERESOLUTION * 8;
+			OCR1C = (TIMERESOLUTION < 4) ? 32 : TIMERESOLUTION * 8;
 		TIMSK |= _BV(TOIE1);//Enable overflow interrupt
 
 
@@ -268,8 +269,27 @@ void generatePWMout(void) {
 
 void calculateConversionFactor(void){
 
-	conversionA = 255 * (inputA_MAX - inputA_MIN);
-	conversionB = 255 * (inputB_MAX - inputB_MIN);
+	//Conversion A caculation
+		if(inputA_MAX > inputA_MIN){
+			
+			conversionA = UINT8_MAX / (inputA_MAX - inputA_MIN);
+
+		} else {
+
+			conversionA = 0;
+
+		}
+
+	//Conversion B caculation
+	if(inputB_MAX > inputB_MIN){
+		
+		conversionB = UINT8_MAX / (inputB_MAX - inputB_MIN);
+
+	} else {
+
+		conversionB = 0;
+
+	}	
 
 }
 
@@ -279,10 +299,10 @@ void sweepPWMout(uint8_t toggle){
 
 	if(toggle) {
 
-		TIMSK |= _BV(TOIE0); //Enable interrupt on PWM overflow
-		TCCR0B |= _BV(CS00); //Slow down of PWM output to ~500Hz
 		OCR0A = 0;
 		OCR0B = 127;
+		TCCR0B |= _BV(CS00); //Slow down of PWM output to ~500Hz
+		TIMSK |= _BV(TOIE0); //Enable interrupt on PWM overflow
 
 	} else {
 
@@ -293,6 +313,14 @@ void sweepPWMout(uint8_t toggle){
 
 }
 
+
+ISR( TIMER0_OVF_vect ){
+
+	//Sweep the PWM signals
+	OCR0A = OCR0A + 1;
+	OCR0B = OCR0B + 1;
+
+}
 
 
 ISR( TIMER1_OVF_vect ){
@@ -321,15 +349,5 @@ ISR( PCINT0_vect ) {
 ISR( INT0_vect ) {
 
 	calibration = (PINB>>PINB2) & 1;
-
-}
-
-
-
-ISR( TIMER0_OVF_vect ){
-
-	//Sweep the PWM signals
-	OCR0A = OCR0A + 1;
-	OCR0B = OCR0B + 1;
 
 }
