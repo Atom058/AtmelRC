@@ -33,10 +33,17 @@ Because the PWM signal is highly sensitive to differences, it is not guaranteed 
 * Hfuse: 0xD7
 * Efuse: 0xFF
 
-The fuse settings can be written using [avrdude][avrdude syntax documentation].
+The fuse settings can be written using [avrdude][avrdude syntax documentation], as such:
+--
+avrdude -p t85 -U lfuse:w:0xe1:m -U hfuse:w:0xd7:m -U efuse:w:0xff:m
+--
 
 ## Burning the software to the ATMEL
-This is the easy part! [Simply use avrdude][avrdude syntax documentation].
+This is the easy part! [Simply use avrdude][avrdude syntax documentation], as such:
+
+--
+avrdude -p t85 -U flash:w:atmelrc.hex:h
+--
 
 ## Calibration of PWM output
 THe output of the PWM is dependent on how the ingoing signals gets processed. To ensure a proper and full operation, a calibration of the device is needed. The process of calibration is explained in the steps below
@@ -53,7 +60,7 @@ THe output of the PWM is dependent on how the ingoing signals gets processed. To
 	1. Channel B, low (PB1 flashing)
 	1. Channel B, middle (PB0 & PB1 flashing)
 1. __NOTE__: the middle position for A is only visible if Channel B is not present. Both outputs flashing indicates calibration done!
-1. Disconnect __PB2__ from VCC. __IMPORTANT:__ _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_. The calibration values is stored to EEPROM, making them persistent.
+1. Disconnect __PB2__ from VCC. The calibration values is stored to EEPROM, making them persistent. __IMPORTANT__: _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_.
 1. DONE! The maximum and minimum values are now stored.
 
 ## Pins
@@ -68,7 +75,7 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 * Pin 4: GND
 * Pin 5: PB0/OC0A, PWM output 1
 * Pin 6: PB1/OC0B, PWM output 2
-* Pin 7: PB2 _Calibration pin, set to VCC to being calibration._
+* Pin 7: PB2 _Calibration pin, set to VCC to begin calibration._
 * Pin 8: Vcc
 
 # External resources
