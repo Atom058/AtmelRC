@@ -7,6 +7,7 @@
 //Counters for time-keeping
 	volatile uint16_t counterA = 0;
 	volatile uint16_t counterB = 0;
+	volatile uint16_t counterC = CALIBRATIONDEBOUNCE;
 
 //Input values
 	uint16_t inputA_value = 0;
@@ -27,13 +28,14 @@
 	uint16_t NEW_inputB_MAX = 0; //Temp save for new values
 	uint16_t NEW_inputB_MIN = 0; //Temp save for new values
 
+	uint8_t calA_done = 0;
+
 	float conversionA = 0; //Conversion factor from input > PWM out
 	float conversionB = 0; //Conversion factor from input > PWM out
 
 //PWM Outputs
 	uint8_t PWM_outA = 0;
 	uint8_t PWM_outB = 0;
-
 
 
 int main (void) {
@@ -57,15 +59,15 @@ int main (void) {
 
 
 		//Device enters calibration when PB2 is high
-		if(calibration) {
+		if(calibration && counterC >= CALIBRATIONDEBOUNCE) {
 
 
 			if(!calibrationINIT){
 				//Resets the calibration levels
-				NEW_inputA_MIN = inputA_value;
-				NEW_inputA_MAX = inputA_value;
-				NEW_inputB_MIN = inputB_value;
-				NEW_inputB_MAX = inputB_value;
+				NEW_inputA_MIN = 0;//inputA_value;
+				NEW_inputA_MAX = 0;//inputA_value;
+				NEW_inputB_MIN = 0;//inputB_value;
+				NEW_inputB_MAX = 0;//inputB_value;
 
 				calibrationINIT = 1; //Will not enter this section next loop
 				
@@ -74,28 +76,67 @@ int main (void) {
 			} else {
 			
 				//Update A values
-					if(inputA_value > NEW_inputA_MAX){
+					if(!calA_done){
+						if(inputA_value >= NEW_inputA_MAX){
 
-						NEW_inputA_MAX = inputA_value;
-						save = 1;
+							NEW_inputA_MAX = inputA_value;
+							NEW_inputA_MIN = inputA_value; //Max should be determined first
+							save = 1;
 
-					} else if((inputA_value < NEW_inputA_MIN) && (inputA_value != 0)){
+							//Turn of one of the PWM signals to indicate ceiling setting
+								DDRB |= _BV(DDB1);
+								DDRB &= ~(_BV(DDB0));
 
-						NEW_inputB_MIN = inputA_value;
-						save = 1;
+						} else if (inputA_value <= (NEW_inputA_MAX - 20)){
 
+							DDRB |= _BV(DDB0); //Re-enable PWM signal to indicate ceiling done
+
+							if((inputA_value <= NEW_inputA_MIN) && (inputA_value > 0)){
+
+								NEW_inputA_MIN = inputA_value;
+								save = 1;
+								DDRB &= ~(_BV(DDB1)); //Turn of the other PWM output to indicate floor setting
+
+							} else if (inputA_value >= NEW_inputA_MIN + 20){
+
+								DDRB |= _BV(DDB1); //Re-enable PWM signal to indicate calibration complete
+								calA_done = 1;
+
+							}
+
+						}
 					}
 
 				//Update B values
-					if(inputB_value > NEW_inputB_MAX){
+					if(calA_done && inputB_value > 20) {
 
-						NEW_inputB_MAX = inputB_value;
-						save = 1;
+						if(inputB_value >= NEW_inputB_MAX){
 
-					} else if((inputB_value < NEW_inputB_MIN) && (inputB_value != 0)){
+							NEW_inputB_MAX = inputB_value;
+							NEW_inputB_MIN = inputB_value; //Max should be determined first
+							save = 1;
 
-						NEW_inputB_MIN = inputB_value;
-						save = 1;
+							//Turn of one of the PWM signals to indicate ceiling setting
+								DDRB |= _BV(DDB1);
+								DDRB &= ~(_BV(DDB0));
+
+						} else if (inputB_value <= (NEW_inputB_MAX - 20)){
+
+							DDRB |= _BV(DDB0); //Re-enable PWM signal to indicate ceiling done
+
+							if((inputB_value <= NEW_inputB_MIN) && (inputB_value > 0)){
+
+								NEW_inputB_MIN = inputB_value;
+								save = 1;
+								DDRB &= ~(_BV(DDB1)); //Turn of the other PWM output to indicate floor setting
+
+							} else if (inputB_value >= NEW_inputB_MIN + 20){
+
+								DDRB |= _BV(DDB1); //Re-enable PWM signal to indicate calibration complete
+
+							}
+
+						}
 
 					}
 
@@ -112,6 +153,11 @@ int main (void) {
 				inputB_MAX = NEW_inputB_MAX;
 				inputB_MIN = NEW_inputB_MIN;
 
+				NEW_inputA_MIN = 0;
+				NEW_inputA_MAX = 0;
+				NEW_inputB_MIN = 0;
+				NEW_inputB_MAX = 0;
+
 			//Update memory locations. This might take some time...
 				eeprom_update_word(AMAX, inputA_MAX);
 				eeprom_update_word(AMIN, inputA_MIN);
@@ -122,8 +168,10 @@ int main (void) {
 				calculateConversionFactor();
 			
 			//Reset calibration state
-				save = 0;
+				counterC = 0; //Debounce timer
 				calibrationINIT = 0;
+				calA_done = 0;
+				save = 0;
 				sweepPWMout(0); //Turn of PWM sweeping
 
 			sei(); //Enable interrupts again
@@ -156,9 +204,8 @@ void setup(void){
 		calculateConversionFactor(); //Calculates the PWM conversion factors
 
 	//Setup of the input pins, adding interrupts
-		GIMSK |= _BV(PCIE) | _BV(INT0);
+		GIMSK |= _BV(PCIE);
 		PCMSK = _BV(PCINT3) | _BV(PCINT4); //Add interrupts for input pins
-		MCUCR |= _BV(ISC00); //Add interrupt on any change of calibration pin
 
 		
 	//Setup of Timer0 for PWM modes
@@ -168,6 +215,7 @@ void setup(void){
 		OCR0B = PWM_outB; //Set the inital compare levels for outB
 		DDRB |= _BV(DDB0) | _BV(DDB1); // Set pins as output
 		TCCR0A |= _BV(COM0A1) | _BV(COM0B1); //Set pins as PWM outputs
+		TIMSK |= _BV(TOIE0); //Enable interrupt on PWM overflow
 
 
 	//Setup of Timer1 for time-keeping
@@ -272,7 +320,7 @@ void calculateConversionFactor(void){
 	//Conversion A caculation
 		if(inputA_MAX > inputA_MIN){
 			
-			conversionA = UINT8_MAX / (inputA_MAX - inputA_MIN);
+			conversionA = 255 / (inputA_MAX - inputA_MIN);
 
 		} else {
 
@@ -283,7 +331,7 @@ void calculateConversionFactor(void){
 	//Conversion B caculation
 	if(inputB_MAX > inputB_MIN){
 		
-		conversionB = UINT8_MAX / (inputB_MAX - inputB_MIN);
+		conversionB = 255 / (inputB_MAX - inputB_MIN);
 
 	} else {
 
@@ -302,11 +350,10 @@ void sweepPWMout(uint8_t toggle){
 		OCR0A = 0;
 		OCR0B = 127;
 		TCCR0B |= _BV(CS00); //Slow down of PWM output to ~500Hz
-		TIMSK |= _BV(TOIE0); //Enable interrupt on PWM overflow
 
 	} else {
 
-		TIMSK &= ~(_BV(TOIE0)); //Disable interrupt on PWM overflow
+		DDRB |= _BV(DDB0) | _BV(DDB1); //Re-enable both pins if necessary
 		TCCR0B &= ~(_BV(CS00)); //Restore PWM output to ~4KHz
 
 	}
@@ -316,9 +363,22 @@ void sweepPWMout(uint8_t toggle){
 
 ISR( TIMER0_OVF_vect ){
 
-	//Sweep the PWM signals
-	OCR0A = OCR0A + 1;
-	OCR0B = OCR0B + 1;
+	if(calibration) {
+
+		//Sweep the PWM signals on calibration
+		OCR0A = OCR0A + 1;
+		OCR0B = OCR0B + 1;
+
+	} else {
+
+		//Counter to debounce the calibration setting
+		if(counterC < UINT16_MAX){
+
+			counterC = counterC + 1;
+
+		}
+
+	}
 
 }
 
@@ -327,9 +387,13 @@ ISR( TIMER1_OVF_vect ){
 
 	//Function to calculate µs of the signal
 	if(signalA) {
+
 		counterA = counterA + 1; //Add another tic to the counter. 
+
 	} else if(signalB){
+
 		counterB = counterB + 1; //Add another tic to the counter. 
+
 	}
 
 }
@@ -341,6 +405,7 @@ ISR( PCINT0_vect ) {
 	//Sets signal values
 	signalA = (PINB>>PINB3) & 1;
 	signalB = (PINB>>PINB4) & 1;
+	calibration = (PINB>>PINB2) & 1;
 
 }
 

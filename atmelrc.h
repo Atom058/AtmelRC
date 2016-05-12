@@ -12,12 +12,15 @@
 	void sweepPWMout(uint8_t toggle);
 	void calculateConversionFactor(void);
 
+	#define CALIBRATIONDEBOUNCE (uint16_t) (F_CPU/4096) //This should be about 1 second
+
 	// Clock Calibration
 		#define INTERNALOSCILLATORCALIBRATION 0b01011000
 		#define TIMERESOLUTION (uint8_t) 4 //µs per tic. 4µs is maximum resolution, and the standard setting.
 
 	//Deadzone on both high and low ends. 15 is ~5% of 255.
 	#define PWMDEADZONE (uint8_t) 15
+
 
 	//Memory addresses of stored calibration. Randomly spaced #YOLO
 	#define AMAX (uint16_t*) 0x00
