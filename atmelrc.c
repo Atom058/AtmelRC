@@ -8,6 +8,7 @@
 	volatile uint16_t counterA = 0;
 	volatile uint16_t counterB = 0;
 	volatile uint16_t counterC = CALIBRATIONDEBOUNCE;
+	volatile uint16_t counterD = 0;
 
 //Input values
 	uint16_t inputA_value = 0;
@@ -27,6 +28,9 @@
 	uint16_t NEW_inputA_MIN = 0; //Temp save for new values
 	uint16_t NEW_inputB_MAX = 0; //Temp save for new values
 	uint16_t NEW_inputB_MIN = 0; //Temp save for new values
+
+	uint8_t channelMargin = 0;
+	uint8_t lowerBoundSet = 0;
 
 	uint8_t calA_done = 0;
 	uint8_t calB_done = 0;
@@ -75,70 +79,128 @@ int main (void) {
 					inputB_value = 0;
 
 				calibrationINIT = 1; //Will not enter this section next loop
-				
-				sweepPWMout(1); //Turn on visual indicator of calibration
 
 			} else {
 			
 				//Update A values
 					if(!calA_done){
-						if(inputA_value >= NEW_inputA_MAX){
+
+						DDRB |= _BV(DDB0); //Turn on channel A
+						DDRB &= ~(_BV(DDB1)); //Turn off channel B
+
+						if(inputA_value > NEW_inputA_MAX){
 
 							NEW_inputA_MAX = inputA_value;
-							NEW_inputA_MIN = inputA_value; //Max should be determined first
-							save = 1;
+							NEW_inputA_MIN = inputA_value; //Restore min value
+							channelMargin = inputA_value / 10; //set the minimum amount of travel in the band
+							OCR0A = UINT8_MAX; //Turn output on
+							counterD = 0; //Reset calibration timer
+							lowerBoundSet = 0;
 
-							//Turn of one of the PWM signals to indicate ceiling setting
-								DDRB |= _BV(DDB1);
-								DDRB &= ~(_BV(DDB0));
+						} else if(
+									(inputA_value <= NEW_inputA_MIN) && 
+									(inputA_value > channelMargin) && //Sets minimum signal level
+									((NEW_inputA_MAX - inputA_value) > channelMargin) //Minimum travel distance
+								) {
 
-						} else if (inputA_value <= (NEW_inputA_MAX - 20)){
+							NEW_inputA_MIN = inputA_value;
+							OCR0A = 0; //Turn output off
+							lowerBoundSet = 1;
+							counterD = 0; //Reset calibration timer
 
-							DDRB |= _BV(DDB0); //Re-enable PWM signal to indicate ceiling done
+						}
 
-							if((inputA_value <= NEW_inputA_MIN) && (inputA_value > 0)){
+						if(lowerBoundSet) {
 
-								NEW_inputA_MIN = inputA_value;
-								save = 1;
-								DDRB &= ~(_BV(DDB1)); //Turn of the other PWM output to indicate floor setting
+							// Generate PWM output
+								uint8_t pwm_temp = (uint8_t) 
+									(inputA_value - NEW_inputA_MIN) * (UINT8_MAX / (NEW_inputA_MAX - NEW_inputA_MIN));
 
-							} else if (inputA_value >= NEW_inputA_MIN + 20){
+								if(pwm_temp > (UINT8_MAX - PWMDEADZONE)){
 
-								DDRB |= _BV(DDB1); //Re-enable PWM signal to indicate calibration complete
+									OCR0A = UINT8_MAX;
+
+								} else if (pwm_temp <= PWMDEADZONE){
+
+									OCR0A = 0;
+
+								} else {
+
+									OCR0A = pwm_temp;
+
+								}
+
+							if(counterD > (CALIBRATIONDEBOUNCE * 4)){
+								
+								// Wait until accepting and proceeding to channel B
 								calA_done = 1;
+								lowerBoundSet = 0;
+								save = 1;
 
 							}
 
 						}
+
 					}
 
 				//Update B values
-					if(calA_done && inputB_value > 20) {
+					if(calA_done && !calB_done) {
 
-						if(inputB_value >= NEW_inputB_MAX){
+						DDRB |= _BV(DDB1); //Turn on channel B
+						DDRB &= ~(_BV(DDB0)); //Turn off channel A
 
-							NEW_inputB_MAX = inputB_value;
-							NEW_inputB_MIN = inputB_value; //Max should be determined first
-							save = 1;
+						if(inputB_value > 20){
 
-							//Turn of one of the PWM signals to indicate ceiling setting
-								DDRB |= _BV(DDB1);
-								DDRB &= ~(_BV(DDB0));
+							if(inputB_value > NEW_inputB_MAX){
 
-						} else if (inputB_value <= (NEW_inputB_MAX - 20)){
+								NEW_inputB_MAX = inputB_value;
+								NEW_inputB_MIN = inputB_value; //Restore min value
+								channelMargin = inputB_value / 10; //set the minimum amount of travel in the band
+								OCR0B = UINT8_MAX; //Turn output on
+								counterD = 0; //Reset calibration timer
+								lowerBoundSet = 0;
 
-							DDRB |= _BV(DDB0); //Re-enable PWM signal to indicate ceiling done
-
-							if((inputB_value <= NEW_inputB_MIN) && (inputB_value > 0)){
+							} else if(
+										(inputB_value <= NEW_inputB_MIN) && 
+										(inputB_value > channelMargin) && //Sets minimum signal level
+										((NEW_inputB_MAX - inputB_value) > channelMargin) //Minimum travel distance
+									) {
 
 								NEW_inputB_MIN = inputB_value;
-								save = 1;
-								DDRB &= ~(_BV(DDB1)); //Turn of the other PWM output to indicate floor setting
+								lowerBoundSet = 1;
+								counterD = 0; //Reset calibration timer
 
-							} else if (inputB_value >= NEW_inputB_MIN + 20){
+							}
 
-								DDRB |= _BV(DDB1); //Re-enable PWM signal to indicate calibration complete
-								calB_done = 1;
+							if(lowerBoundSet) {
+
+								// Generate PWM out
+									uint8_t pwm_temp = (uint8_t) 
+										(inputB_value - NEW_inputB_MIN) * (UINT8_MAX / (NEW_inputB_MAX - NEW_inputB_MIN));
+
+									if(pwm_temp > (UINT8_MAX - PWMDEADZONE)){
+
+										OCR0B = UINT8_MAX;
+
+									} else if (pwm_temp <= PWMDEADZONE){
+
+										OCR0B = 0;
+
+									} else {
+
+										OCR0B = pwm_temp;
+
+									}
+
+								if(counterD > (CALIBRATIONDEBOUNCE * 4)){
+									
+									// Wait until accepting and proceeding to channel B
+									calB_done = 1;
+									lowerBoundSet = 0;
+									save = 1;
+									DDRB &= ~(_BV(DDB1)); //Turn off channel B
+
+								}
 
 							}
 
@@ -181,7 +243,12 @@ int main (void) {
 				calA_done = 0;
 				calB_done = 0;
 				save = 0;
-				sweepPWMout(0); //Turn of PWM sweeping
+
+			//Restore PWM outputs
+				DDRB |= _BV(DDB0) | _BV(DDB1);
+				inputA_value = 0;
+				inputB_value = 0;
+				
 
 			sei(); //Enable interrupts again
 
@@ -329,7 +396,7 @@ void calculateConversionFactor(void){
 	//Conversion A caculation
 		if(inputA_MAX > inputA_MIN){
 			
-			conversionA = 255 / (inputA_MAX - inputA_MIN);
+			conversionA = UINT8_MAX / (inputA_MAX - inputA_MIN);
 
 		} else {
 
@@ -340,7 +407,7 @@ void calculateConversionFactor(void){
 	//Conversion B caculation
 	if(inputB_MAX > inputB_MIN){
 		
-		conversionB = 255 / (inputB_MAX - inputB_MIN);
+		conversionB = UINT8_MAX / (inputB_MAX - inputB_MIN);
 
 	} else {
 
@@ -351,32 +418,15 @@ void calculateConversionFactor(void){
 }
 
 
-
-void sweepPWMout(uint8_t toggle){
-
-	if(toggle) {
-
-		OCR0A = 0;
-		OCR0B = 127;
-		TCCR0B |= _BV(CS00); //Slow down of PWM output to ~500Hz
-
-	} else {
-
-		DDRB |= _BV(DDB0) | _BV(DDB1); //Re-enable both pins if necessary
-		TCCR0B &= ~(_BV(CS00)); //Restore PWM output to ~4KHz
-
-	}
-
-}
-
-
 ISR( TIMER0_OVF_vect ){
 
 	if(calibration) {
 
-		//Sweep the PWM signals on calibration
-		OCR0A = OCR0A + 1;
-		OCR0B = OCR0B + 1;
+		if(counterD < UINT16_MAX){
+
+			counterD = counterD + 1;
+
+		}
 
 	} else {
 
