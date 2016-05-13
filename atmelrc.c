@@ -122,7 +122,7 @@ int main (void) {
 
 								} else if (pwm_temp <= PWMDEADZONE){
 
-									OCR0A = 0;
+									OCR0A = 25; //Not 0, as the calibration done should be visible
 
 								} else {
 
@@ -184,7 +184,7 @@ int main (void) {
 
 									} else if (pwm_temp <= PWMDEADZONE){
 
-										OCR0B = 0;
+										OCR0B = 25; //Not 0, as the calibration done should be visible
 
 									} else {
 

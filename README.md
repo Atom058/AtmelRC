@@ -46,20 +46,24 @@ avrdude -p t85 -U flash:w:atmelrc.hex:h
 ```
 
 ## Calibration of PWM output
-The output of the PWM is dependent on how the ingoing signals gets processed. To ensure a proper and full operation, a calibration of the device is needed. The process of calibration is explained in the steps below
+The output of the PWM is dependent on how the ingoing signals gets processed. To ensure a proper and full operation, a calibration of the device is needed. The process of calibration is explained in the steps below. The easiest way to calibrate is probably to connect the PWM outputs to a LED.
 
 1. Connect the GND of the ATTiny85 with the GND for the RC receiver
 1. Connect the signal cables to PB3 (_Pin 2_) and PB4 (_Pin 3_) for channel A and channel B respectively.
 1. Connect PB2 (_Pin 7_) to VCC to initiate calibration
-1. The output PWM signals will start flashing to signal ongoing calibration.
-1. The calibration is done in the following order:
-	1. Channel A, high (PB1 flashing)
-	1. Channel A, low (PB0 flashing)
-	1. Channel A, middle (PB0 & PB1 flashing)
-	1. Channel B, high (PB1 flashing)
-	1. Channel B, low (PB1 flashing)
-	1. Channel B, middle (PB0 & PB1 flashing)
-1. __NOTE__: the middle position for A is only visible if Channel B is not present. Both outputs flashing indicates calibration done!
+1. The Channel A PWM output will turn on; the calibration has now started.
+	1. Move Channel A to MAX position.
+	1. Move Channel A to MIN position. An adjustment from MAX is needed for this to be registered.
+	1. Hold the outputs for ~5 seconds until the PWM output turns off. 
+		* The PWM output can be adjusted between min/max values during this waiting time. 
+		* However, the output will never be fully off, because the _calibration done_ signal should be noticable.
+		* If a new MAX position is recorded during this time, the calibration resets to step 2.
+	1. After Channel A's output turns off, calibration of Channel B starts (will only calibrate if Channel B has input).
+1. __OPTIONAL__: The Channel B PWM output will turn on; the calibration has now started.
+	1. Move Channel B to MAX position.
+	1. Move Channel B to MIN position.
+	1. Wait ~5 seconds until Channel B's output turns off.
+1. Calibration levels are now recorded, but not saved.
 1. Disconnect __PB2__ from VCC. The calibration values is stored to EEPROM, making them persistent. __IMPORTANT__: _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_.
 1. DONE! The maximum and minimum values are now stored. __NOTE__: The calibration values will not be updated unless the entire motion of one channel is completed. Channel B should therefore not update if only Channel A was calibrated. 
 
