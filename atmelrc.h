@@ -18,11 +18,11 @@
 		#define INTERNALOSCILLATORCALIBRATION 0b01011000
 		#define TIMERESOLUTION (uint8_t) 4 //µs per tic. 4µs is maximum resolution, and the standard setting.
 
-	//Deadzone on both high and low ends. 15 is ~5% of 255.
-	#define PWMDEADZONE (uint8_t) 15
+	//Deadzone on both high and low ends. 15 is ~10% of 255.
+	#define PWMDEADZONE (uint8_t) 25
 
 
-	//Memory addresses of stored calibration. Randomly spaced #YOLO
+	//Memory addresses of stored calibration. "Randomly" spaced #YOLO
 	#define AMAX (uint16_t*) 0x00
 	#define AMIN (uint16_t*) 0x04
 	#define BMAX (uint16_t*) 0x08
