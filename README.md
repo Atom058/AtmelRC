@@ -30,7 +30,7 @@ Because the PWM signal is highly sensitive to differences, it is not guaranteed 
 
 ### Fuse settings
 * Lfuse: 0xE1
-* Hfuse: 0xD7
+* Hfuse: 0xD5
 * Efuse: 0xFF
 
 The fuse settings can be written using [avrdude][avrdude syntax documentation], as such:
@@ -67,6 +67,9 @@ The output of the PWM is dependent on how the ingoing signals gets processed. To
 1. Disconnect __PB2__ from VCC. The calibration values is stored to EEPROM, making them persistent. __IMPORTANT__: _Do not disconnect power to the ATTiny85 during this step, as this might lead to the EEPROM becoming corrupted_.
 1. DONE! The maximum and minimum values are now stored. __NOTE__: The calibration values will not be updated unless the entire motion of one channel is completed. Channel B should therefore not update if only Channel A was calibrated. 
 
+##Settings - changing the deadzone
+There are some settings that can be changed in the atmelrc.h file. One can disregard most of this, except the PWMDEADZONE value. This value determines the deadzone of the inputs. If you are unsatisfied with a full-on or full-off position, this setting might be of interest to you.
+
 ## Pins
 The inputs from the RC receiver are tied to hardware interrupts on the ATTiny85. This means that the timing pulse will initiate an interrupt vector in software, where the timekeeping will begin and end.
 
@@ -84,7 +87,7 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 
 #Known bugs
 * B1: The calibration will sometimes be overwritten with the wrong values. This is most likely due to a brown-out error.
-* B2: The FULL ON position for a switch does not give a satisfying full-on signal. This could probably be solved with removing the PWM and replacing it with a normal pinout function.
+* B2: ~~The FULL ON position for a switch does not give a satisfying full-on signal. This could probably be solved with removing the PWM and replacing it with a normal pinout function.~~ Turns out this was due to the dead-zone being set to an incorrect value.
 
 # External resources
 * [WIN-AVR][WIN-AVR link]
