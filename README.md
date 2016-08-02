@@ -82,6 +82,10 @@ The ATTiny85 has 2 pins that can be used as PWM outputs. These are the output po
 * Pin 7: PB2 _Calibration pin, set to VCC to begin calibration._
 * Pin 8: Vcc
 
+#Known bugs
+* B1: The calibration will sometimes be overwritten with the wrong values. This is most likely due to a brown-out error.
+* B2: The FULL ON position for a switch does not give a satisfying full-on signal. This could probably be solved with removing the PWM and replacing it with a normal pinout function.
+
 # External resources
 * [WIN-AVR][WIN-AVR link]
 * [USBASP programmers][USBASP link]
